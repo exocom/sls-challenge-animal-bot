@@ -1,0 +1,14 @@
+{
+  "name": "nov-12-animal-bot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/exocom/sls-challenge-animal-bot.git",
+  "author": "Kalarrs Topham <k-dawg-klakr@hotmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@kalarrs/serverless-domain-manager": "^2.4.0",
+    "@kalarrs/serverless-shared-api-gateway": "^1.0.8",
+    "@kalarrs/serverless-workspace-utils": "^1.0.1",
+    "serverless": "^1.32.0"
+  }
+}
