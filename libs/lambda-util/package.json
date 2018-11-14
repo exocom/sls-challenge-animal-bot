@@ -1,0 +1,14 @@
+{
+  "name": "lambda-util",
+  "private": true,
+  "version": "1.0.0",
+  "main": "lambda-util.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.8",
+    "@types/node": "^10.5.3"
+  },
+  "dependencies": {}
+}
