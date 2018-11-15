@@ -1,14 +1,35 @@
-import {ApiGatewayHandler, ScheduleEventHandler} from '../../libs/lambda-util/lambda-util';
-import {DynamoDBStreamHandler, S3Handler, SNSHandler, SQSHandler, CloudWatchLogsHandler, CognitoUserPoolTriggerHandler} from "../../libs/lambda-util/node_modules/@types/aws-lambda";
+import {Rekognition} from 'aws-sdk';
+import {readFile} from 'fs';
+import {promisify} from 'util';
+import path = require('path');
 
-// export const handler: ApiGatewayHandler = async (event, context) => {
-// export const handler: DynamoDBStreamHandler = async (event, context) => {
-// export const handler: S3Handler = async (event, context) => {
-// export const handler: ScheduleEventHandler = async (event, context) => {
-// export const handler: SNSHandler = async (event, context) => {
-// export const handler: SQSHandler = async (event, context) => {
-// export const handler: CloudWatchLogsHandler = async (event, context) => {
-// export const handler: CognitoUserPoolTriggerHandler = async (event, context) => {
+const fs = {
+  readFile: promisify(readFile)
+};
+const rekognition = new Rekognition({region: 'us-west-2'});
 
-// };
+export const detectRareAlien = async (event, context) => {
+  const catBuffer = await fs.readFile(path.join(__dirname, 'cat.jpeg'));
+
+  const params = {
+    Image: {
+      Bytes: catBuffer, // new Buffer('...') || 'STRING_VALUE' /* Strings will be Base-64 encoded on your behalf */,
+    },
+    MaxLabels: 5,
+    MinConfidence: 80
+  };
+  const result = await rekognition.detectLabels(params).promise();
+
+  const isAnimal = result.Labels.find(l => l.Name === 'Animal');
+  const label = result.Labels.find(l => {
+    return !!l.Parents.find(p => p.Name === 'Invertebrate'
+      || p.Name === 'Mammal' || p.Name === 'Bird' || p.Name === 'Amphibian'
+      || p.Name === 'Reptile' || p.Name === 'Fish')
+  });
+  if (isAnimal && label) {
+    const message = `I don't know but QT says "It's an ordinary ${label.Name}."`;
+    console.log(message);
+  }
+
+};
 
