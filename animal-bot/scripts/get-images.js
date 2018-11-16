@@ -1,43 +1,46 @@
+const {writeFile} = require('fs');
+const {promisify} = require('util');
 const {Google, Bing, Yahoo} = require('images-scraper');
 const google = new Google();
+const bing = new Bing();
+const yahoo = new Yahoo();
+
+const fs = {
+  writeFile: promisify(writeFile)
+}
 
 const config = {
-    num: 20,
-    detail: true,
-    nightmare: {
-        show: true
-    }
+  num: 20,
+  detail: true,
+  nightmare: {
+    show: false
+  }
 };
 
-/*
-    {
-    height: 360,
-    thumb_height: 194,
-    thumb_url:
-     'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTldQebKSh6nePflG-5ivzJhKdJIB0cH_XIMZrYGUW0p1Xk-LhyFQ',
-    thumb_width: 259,
-    type: 'image/jpg',
-    url: 'https://i.ytimg.com/vi/Cy15_9LbScQ/hqdefault.jpg',
-    width: 480
-    }
- */
-
 (async () => {
-    const keywords = ['dandy from space dandy', 'qt from space dandy', 'meow from space dandy'];
+  const keywords = ['dandy', 'qt', 'meow'];
 
-    // you can also watch on events
-    google.on('result', function (item) {
-        console.log('out', item);
+  const images = await keywords.reduce(async (promise, keyword) => {
+    return promise.then(async (data) => {
+      const options = {...config, keyword: keyword + ' from space dandy'};
+
+      const googleRes = google.list(options);
+      const bingRes = bing.list(options);
+      const yahooRes = yahoo.list(options);
+
+      process.stdout.write(keyword);
+      const outputInterval = setInterval(() => {
+        process.stdout.write('.');
+      }, 200);
+
+      const resultSet = await Promise.all([googleRes, bingRes, yahooRes]);
+      process.stdout.write('\n');
+      clearInterval(outputInterval);
+      data[keyword] = resultSet.reduce((arr, result) => arr.concat(result), []);
+      return data;
     });
-    const res = await google.list({
-        ...config,
-        keyword: keywords[0]
-    });
+  }, new Promise((resolve) => resolve({})));
 
-    console.log(5
-    res
-)
-    ;
-
-
+  await fs.writeFile('images.json', JSON.stringify(images));
+  console.log('Image File created: images.json');
 })();
