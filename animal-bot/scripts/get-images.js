@@ -10,7 +10,7 @@ const fs = {
 }
 
 const config = {
-  num: 20,
+  num: 100,
   detail: true,
   nightmare: {
     show: false
