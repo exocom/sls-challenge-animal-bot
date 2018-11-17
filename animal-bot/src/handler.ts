@@ -108,7 +108,7 @@ export const getImagesCsvMappings: ApiGatewayHandler = async (event, context) =>
   });
 
   for (let file of files) {
-    const [url] = await bucket.file('files.csv').getSignedUrl({
+    const [url] = await bucket.file(file.gsPath.replace(/^gs:\/\/serverless-animal-bot-vcm\//,'')).getSignedUrl({
       action: 'read',
       expires: moment().add(1, 'day').valueOf()
     });
