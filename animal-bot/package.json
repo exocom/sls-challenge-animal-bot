@@ -10,6 +10,7 @@
     "watch": "../node_modules/.bin/tsc -w"
   },
   "devDependencies": {
+    "@google-cloud/storage": "^2.3.1",
     "@kalarrs/serverless-local-dev-server": "^1.1.7",
     "@kalarrs/serverless-project-utils": "^2.2.1",
     "@types/node": "^10.12.3",
