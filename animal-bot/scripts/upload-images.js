@@ -13,7 +13,7 @@ const images = require('./images.json');
   const uploads = Object.keys(images).reduce((promises, key, i) => {
     const arr = images[key].filter(i => !/img\.gawkerassets\.com/gi.test(i.url)).map((image, index) => {
       return new Promise((resolve, reject) => {
-        let fileName = image.url.replace(/.*?\/\/.*?(?<!\/)\/([^\/]+\.(jpeg|jpg|gif|png)).*$/gi, '$1').replace(',', '');
+        let fileName = image.url.replace(/.*?\/\/.*?(?<!\/)\/([^\/]+\.(jpeg|jpg|gif|png)).*$/gi, '$1').replace(/,/gi, '');
         if (image.url.length === fileName.length) fileName = `${key}${Math.random()}.jpg`;
         const filePath = `/${key}/${index}-${fileName}`;
         const file = myBucket.file(filePath);
