@@ -15,12 +15,20 @@ provider:
 #    CHANGE_VALUE: ${env:CHANGE_VALUE, file(../serverless.yml):provider.environment.CHANGE_VALUE}
 
 functions:
-  handler:
+  detectRareAlien:
     handler: src/handler.detectRareAlien
 
     events:
     - http:
         path: detect-rare-alien
+        method: get
+
+  getImagesCsvMappings:
+    handler: src/handler.getImagesCsvMappings
+
+    events:
+    - http:
+        path: images/csv-mappings
         method: get
 
 

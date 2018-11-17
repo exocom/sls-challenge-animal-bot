@@ -10,7 +10,6 @@
     "watch": "../node_modules/.bin/tsc -w"
   },
   "devDependencies": {
-    "@google-cloud/storage": "^2.3.1",
     "@kalarrs/serverless-local-dev-server": "^1.1.7",
     "@kalarrs/serverless-project-utils": "^2.2.1",
     "@types/node": "^10.12.3",
@@ -23,5 +22,9 @@
     "webpack": "^4.25.1",
     "webpack-node-externals": "^1.7.2"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@google-cloud/storage": "^2.3.1",
+    "class-transformer": "^0.2.0",
+    "moment": "^2.22.2"
+  }
 }
