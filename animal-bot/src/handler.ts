@@ -2,14 +2,17 @@ import {Rekognition} from 'aws-sdk';
 import {readFile} from 'fs';
 import {promisify} from 'util';
 import path = require('path');
+import {Readable} from 'stream';
 import {ApiGatewayHandler, LambdaUtil} from '../../libs/lambda-util/lambda-util';
-import {plainToClass} from 'class-transformer';
+import {deserialize, plainToClass} from 'class-transformer';
 import {Storage} from '@google-cloud/storage';
 import moment = require('moment');
 
 
 const storage = new Storage();
-const bucket = storage.bucket('serverless-animal-bot-vcm');
+const bucketName = 'serverless-animal-bot-vcm';
+const bucket = storage.bucket(bucketName);
+const gsFileNameRegExp = new RegExp(`^gs:\/\/${bucketName}\/`);
 
 const fs = {
   readFile: promisify(readFile)
@@ -44,7 +47,7 @@ export const detectRareAlien = async (event, context) => {
 
 class ImagesCsvMappingsRequestQueryStringParameters {
   private _limit: number = 50;
-  private _skip: number = 50;
+  private _skip: number = 0;
 
   set limit(value: number | string) {
     this._limit = typeof value === 'string' ? parseInt(value) : value;
@@ -63,9 +66,13 @@ class ImagesCsvMappingsRequestQueryStringParameters {
   };
 }
 
+type mappingState = 'TRAIN' | 'TEST' | 'VALIDATION';
+
 interface CsvMapping {
+  id: number | null,
+  state: mappingState | null,
   gsPath: string;
-  tags: string;
+  tags: Array<string>;
   url?: string;
 }
 
@@ -98,22 +105,126 @@ export const getImagesCsvMappings: ApiGatewayHandler = async (event, context) =>
     });
   });
 
-
-  const files: Array<CsvMapping> = csv.split(`\n`).slice(skip, skip + limit).map(l => {
-    const [gsPath, tags] = l.split(',');
-    return {
-      gsPath,
-      tags
-    };
-  });
-
-  for (let file of files) {
-    const [url] = await bucket.file(file.gsPath.replace(/^gs:\/\/serverless-animal-bot-vcm\//,'')).getSignedUrl({
-      action: 'read',
-      expires: moment().add(1, 'day').valueOf()
+  const csvMappings: Array<CsvMapping> = csv.trim()
+    .split(/\r?\n/)
+    .slice(skip, skip + limit)
+    .map((csvLine, index) => {
+      const id = index + skip + 1;
+      if (/^[TV].*?,gs:/.test(csvLine)) {
+        const [state, gsPath, ...tags] = csvLine.split(',');
+        return {
+          id,
+          state: state as mappingState,
+          gsPath,
+          tags
+        };
+      }
+      if (/^gs:/.test(csvLine)) {
+        const [gsPath, ...tags] = csvLine.split(',');
+        return {
+          id,
+          state: null,
+          gsPath,
+          tags
+        };
+      }
+      return {
+        id,
+        state: null,
+        gsPath: null,
+        tags: null
+      };
     });
-    file.url = url;
+
+  try {
+    for (let csvMapping of csvMappings) {
+      if (csvMapping === null) continue;
+      const [url] = await bucket.file(csvMapping.gsPath.replace(gsFileNameRegExp, '')).getSignedUrl({
+        action: 'read',
+        expires: moment().add(1, 'day').valueOf()
+      });
+      csvMapping.url = url;
+    }
+  } catch (e) {
+    console.log(e);
   }
-  return lambdaUtil.apiResponseJson({statusCode: 200, body: {data: files}});
+  return lambdaUtil.apiResponseJson({statusCode: 200, body: {data: csvMappings}});
 };
 
+
+class UpdateImagesCsvMappingRequestBody {
+  private _tags: Array<string>;
+
+  state: mappingState;
+  gsPath: string;
+
+  set tags(value: Array<string> | null) {
+    this._tags = value || [];
+  }
+
+  get tags() {
+    return this._tags;
+  }
+}
+
+class UpdateImagesCsvMappingRequestQueryStringParameters {
+  private _id: number | null = null;
+
+  set id(value: number | string) {
+    this._id = typeof value === 'string' ? parseInt(value) : value;
+  }
+
+  get id(): number | string {
+    return this._id;
+  }
+}
+
+export const updateImagesCsvMapping: ApiGatewayHandler = async (event, context) => {
+  const {id} = plainToClass(UpdateImagesCsvMappingRequestQueryStringParameters, event.pathParameters, {excludePrefixes: ['_']});
+  const {state, gsPath, tags} = deserialize(UpdateImagesCsvMappingRequestBody, event.body, {excludePrefixes: ['_']});
+  const file = bucket.file('files.csv');
+
+  const stream = file.createReadStream();
+
+  const csv = await new Promise<string>((resolve, reject) => {
+    let csv = '';
+    stream.on('data', (chunk) => {
+      csv += chunk.toString() || '';
+    });
+    stream.on('finish', () => {
+      resolve(csv);
+    });
+    stream.on('error', (err) => {
+      reject(err);
+    });
+  });
+
+  const csvLine = `${state},${gsPath},${tags.join(',')}`;
+  csv.replace(new RegExp(`^.*?${gsPath}.*?$`), csvLine);
+
+  await new Promise<string>((resolve, reject) => {
+    const stream = new Readable();
+    stream._read = () => {
+    }; // redundant? see update below
+    stream.push(csv);
+    stream.push(null);
+    stream.pipe(file.createWriteStream())
+      .on('error', reject)
+      .on('finish', resolve);
+  });
+
+  const [url] = await bucket.file(gsPath.replace(gsFileNameRegExp, '')).getSignedUrl({
+    action: 'read',
+    expires: moment().add(1, 'day').valueOf()
+  });
+
+  const csvMapping: CsvMapping = {
+    id: id as number | null,
+    state,
+    gsPath,
+    tags,
+    url
+  };
+
+  return lambdaUtil.apiResponseJson({statusCode: 200, body: {data: csvMapping}});
+};
