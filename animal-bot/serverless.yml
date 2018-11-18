@@ -17,7 +17,6 @@ provider:
 functions:
   detectRareAlien:
     handler: src/handler.detectRareAlien
-
     events:
     - http:
         path: detect-rare-alien
@@ -25,12 +24,17 @@ functions:
 
   getImagesCsvMappings:
     handler: src/handler.getImagesCsvMappings
-
     events:
     - http:
         path: images/csv-mappings
         method: get
 
+  updateImagesCsvMapping:
+    handler: src/handler.updateImagesCsvMapping
+    events:
+    - http:
+        path: images/csv-mappings/{csvMappingId}
+        method: put
 
 custom:
   user: ${file(../serverless.yml):custom.user}

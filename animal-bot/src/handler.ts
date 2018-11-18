@@ -151,9 +151,29 @@ export const getImagesCsvMappings: ApiGatewayHandler = async (event, context) =>
   return lambdaUtil.apiResponseJson({statusCode: 200, body: {data: csvMappings}});
 };
 
+class UpdateImagesCsvMappingRequestQueryStringParameters {
+  private _csvMappingId: number | null = null;
+
+  set csvMappingId(value: number | string) {
+    this._csvMappingId = typeof value === 'string' ? parseInt(value) : value;
+  }
+
+  get csvMappingId(): number | string {
+    return this._csvMappingId;
+  }
+}
 
 class UpdateImagesCsvMappingRequestBody {
   private _tags: Array<string>;
+  private _id: number | null = null;
+
+  set id(value: number | string) {
+    this._id = typeof value === 'string' ? parseInt(value) : value;
+  }
+
+  get id(): number | string {
+    return this._id;
+  }
 
   state: mappingState;
   gsPath: string;
@@ -167,25 +187,20 @@ class UpdateImagesCsvMappingRequestBody {
   }
 }
 
-class UpdateImagesCsvMappingRequestQueryStringParameters {
-  private _id: number | null = null;
-
-  set id(value: number | string) {
-    this._id = typeof value === 'string' ? parseInt(value) : value;
-  }
-
-  get id(): number | string {
-    return this._id;
-  }
-}
-
 export const updateImagesCsvMapping: ApiGatewayHandler = async (event, context) => {
-  const {id} = plainToClass(UpdateImagesCsvMappingRequestQueryStringParameters, event.pathParameters, {excludePrefixes: ['_']});
-  const {state, gsPath, tags} = deserialize(UpdateImagesCsvMappingRequestBody, event.body, {excludePrefixes: ['_']});
+  const {csvMappingId} = plainToClass(UpdateImagesCsvMappingRequestQueryStringParameters, event.pathParameters, {excludePrefixes: ['_']});
+  const {id, state, gsPath, tags} = deserialize(UpdateImagesCsvMappingRequestBody, event.body, {excludePrefixes: ['_']});
+
+  if (csvMappingId !== id || csvMappingId === null) {
+    const errors = [{
+      type: 'Validation',
+      message: 'Invalid Id: The id in the path parameters doesn\'t not match the id on the request body.'
+    }];
+    return lambdaUtil.apiResponseJson({statusCode: 400, body: {errors}});
+  }
+
   const file = bucket.file('files.csv');
-
   const stream = file.createReadStream();
-
   const csv = await new Promise<string>((resolve, reject) => {
     let csv = '';
     stream.on('data', (chunk) => {
@@ -199,14 +214,27 @@ export const updateImagesCsvMapping: ApiGatewayHandler = async (event, context) 
     });
   });
 
+  const csvLineNumber = id as number - 1;
   const csvLine = `${state},${gsPath},${tags.join(',')}`;
-  csv.replace(new RegExp(`^.*?${gsPath}.*?$`), csvLine);
+  const csvLineRegExp = new RegExp(`^.*?${gsPath}.*?$`);
+
+  const csvLines = csv.split(/\r?\n/);
+  if (!csvLineRegExp.test(csvLines[csvLineNumber])) {
+    const errors = [{
+      type: 'Validation',
+      message: 'Invalid Id: The id and gsPath did not match.'
+    }];
+    return lambdaUtil.apiResponseJson({statusCode: 400, body: {errors}});
+  }
+
+  csvLines[csvLineNumber] = csvLine;
+  const updatedCsv = csvLines.join('\r\n');
 
   await new Promise<string>((resolve, reject) => {
     const stream = new Readable();
     stream._read = () => {
     }; // redundant? see update below
-    stream.push(csv);
+    stream.push(updatedCsv);
     stream.push(null);
     stream.pipe(file.createWriteStream())
       .on('error', reject)
@@ -217,7 +245,6 @@ export const updateImagesCsvMapping: ApiGatewayHandler = async (event, context) 
     action: 'read',
     expires: moment().add(1, 'day').valueOf()
   });
-
   const csvMapping: CsvMapping = {
     id: id as number | null,
     state,
