@@ -12,6 +12,7 @@ import moment = require('moment');
 const storage = new Storage();
 const bucketName = 'serverless-animal-bot-vcm';
 const bucket = storage.bucket(bucketName);
+const fileName = 'files.csv';
 const gsFileNameRegExp = new RegExp(`^gs:\/\/${bucketName}\/`);
 
 const fs = {
@@ -81,7 +82,7 @@ export const getImagesCsvMappings: ApiGatewayHandler = async (event, context) =>
   const {skip, limit} = queryStringParameters;
   if (typeof limit === 'string' || typeof skip === 'string') throw new Error('invalid limit or skip');
 
-  const file = bucket.file('files.csv');
+  const file = bucket.file(fileName);
   const stream = file.createReadStream();
 
   const csv = await new Promise<string>((resolve, reject) => {
@@ -199,7 +200,7 @@ export const updateImagesCsvMapping: ApiGatewayHandler = async (event, context) 
     return lambdaUtil.apiResponseJson({statusCode: 400, body: {errors}});
   }
 
-  const file = bucket.file('files.csv');
+  const file = bucket.file(fileName);
   const stream = file.createReadStream();
   const csv = await new Promise<string>((resolve, reject) => {
     let csv = '';
