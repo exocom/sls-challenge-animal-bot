@@ -222,7 +222,7 @@ export const updateImagesCsvMapping: ApiGatewayHandler = async (event, context) 
   if (!csvLineRegExp.test(csvLines[csvLineNumber])) {
     const errors = [{
       type: 'Validation',
-      message: 'Invalid Id: The id and gsPath did not match.'
+      message: 'Invalid Id / GS path combo: The id and gsPath did not match the existing record.'
     }];
     return lambdaUtil.apiResponseJson({statusCode: 400, body: {errors}});
   }
