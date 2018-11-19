@@ -4,6 +4,7 @@ import {CommonModule} from '@angular/common';
 import {PhotoTaggerRoutingModule} from './photo-tagger-routing.module';
 import {PhotoTaggerComponent} from './photo-tagger.component';
 import {MatBadgeModule, MatButtonModule, MatCardModule, MatCheckboxModule, MatChipsModule} from '@angular/material';
+import {ReactiveFormsModule} from '@angular/forms';
 
 @NgModule({
   declarations: [PhotoTaggerComponent],
@@ -14,6 +15,7 @@ import {MatBadgeModule, MatButtonModule, MatCardModule, MatCheckboxModule, MatCh
     MatBadgeModule,
     MatCardModule,
     MatChipsModule,
+    ReactiveFormsModule,
     PhotoTaggerRoutingModule
   ]
 })

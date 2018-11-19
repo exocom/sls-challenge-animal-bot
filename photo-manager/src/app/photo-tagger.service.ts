@@ -23,4 +23,8 @@ export class PhotoTaggerService {
       limit
     });
   }
+
+  saveImageMapping(body) {
+    return this.animalBot.updateCsvImageMapping(body);
+  }
 }

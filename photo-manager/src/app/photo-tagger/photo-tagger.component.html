@@ -10,8 +10,9 @@
     </mat-card>
   </div>
   <div style="float: left; width: calc(100% - 450px); text-align: center;">
+    <!--<pre *ngIf="tagForm">{{tagForm.value |json}}</pre>-->
     <img *ngIf="activeImageMapping" [src]="activeImageMapping.url" style="max-height: calc(100vh - 101px)"/>
-    <p>
+    <p *ngIf="activeImageMapping">
       <span [matBadge]="activeImageMapping.tags.length" matBadgeOverlap="false">{{activeImageMapping.gsPath}}</span>
     </p>
 
@@ -22,19 +23,21 @@
     <p
       style="border-width: 0 0 1px 0; border-style: solid; border-color: #ddd; padding: 0 20px 12px 20px; font-size: 1.1em;">
       Filters</p>
-    <div style="padding: 0 20px; ">
-      <mat-checkbox color="primary">Space Dandy</mat-checkbox>
+    <div style="padding: 0 20px; " *ngIf="tagForm" [formGroup]="tagForm">
+      <mat-checkbox color="primary" formControlName="dandy">Space Dandy</mat-checkbox>
       <br>
-      <mat-checkbox color="primary">QT</mat-checkbox>
+      <mat-checkbox color="primary" formControlName="qt">QT</mat-checkbox>
       <br>
-      <mat-checkbox color="primary">Meow</mat-checkbox>
+      <mat-checkbox color="primary" formControlName="meow">Meow</mat-checkbox>
       <br>
-      <mat-checkbox color="primary">Honey</mat-checkbox>
+      <mat-checkbox color="primary" formControlName="honey">Honey</mat-checkbox>
       <br>
-      <mat-checkbox color="primary">Remove</mat-checkbox>
+      <mat-checkbox color="primary" formControlName="scarlett">Scarlett</mat-checkbox>
+      <br>
+      <mat-checkbox color="primary" formControlName="remove">Remove</mat-checkbox>
       <br>
       <br>
     </div>
-    <button mat-flat-button color="primary" style="display: block; width: 100%;">Next</button>
+    <button mat-flat-button color="primary" style="display: block; width: 100%;" (click)="next()">Next</button>
   </div>
 </div>

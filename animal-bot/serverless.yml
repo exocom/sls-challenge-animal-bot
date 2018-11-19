@@ -33,6 +33,7 @@ functions:
     handler: src/handler.updateImagesCsvMapping
     events:
     - http:
+        cors: true
         path: images/csv-mappings/{csvMappingId}
         method: put
 
