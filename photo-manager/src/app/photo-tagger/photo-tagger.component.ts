@@ -10,6 +10,7 @@ import {ImageMapping} from '../animal-bot.service';
 })
 export class PhotoTaggerComponent implements OnInit {
   limit = 5;
+  halfLimit = Math.ceil(this.limit / 2);
   imageMappings: Array<ImageMapping>;
   activeImageMapping: ImageMapping;
 
@@ -31,8 +32,8 @@ export class PhotoTaggerComponent implements OnInit {
     this.photoTagger.getImageMappings({limit: this.limit, index: photoId})
       .subscribe(imageMappings => {
         this.imageMappings = imageMappings;
-        const position = photoId % this.limit || this.limit;
-        this.activeImageMapping = imageMappings[position];
+        const position = photoId < this.limit ? photoId % this.limit : this.halfLimit;
+        this.activeImageMapping = imageMappings[position - (position > this.halfLimit ? 2 : 1)];
       });
   }
 

@@ -1,19 +1,27 @@
 <div style="min-height: 40px; border-width: 0 0 1px 0; border-style: solid; border-color: #ddd;"></div>
 <!-- Could show vertical stack of images and highlight the active image. make it always in the middle.-->
-<div class="clearfix" style="overflow: hidden; clear: both; height: calc(100vh - 41px);">
-  <div style="float: left; width: calc(100% - 300px); text-align: center;">
-    <img style="min-width: 75%;"
-         src="https://storage.googleapis.com/serverless-animal-bot-vcm/dandy%2F50-04SPACEDANDY-articleLarge.jpg?GoogleAccessId=image-uploader%40serverless-animal-bot.iam.gserviceaccount.com&Expires=1542568900&Signature=hwxmmmuEbhcYr3Q0XZUQQOyghd%2BYThiyfcXG5TPZEzl%2BWON%2Fx9TFBuO9Ss%2BHo4pW3w%2BRZMjY8ywbspkf3xGaoBd3y4T%2FpuMxNKQl9lNd2LD0g4jvE1AwmIzpPMExMLaEnIVTpeWZzmQi1ygJ4mGUxj8QIrxLhfiPEiGYqv9U7yggbv2KUb8hMUf2ROHjqfMNCSvHi73F2L1YCUU5N7a4Nh%2FTNngKMBbK8trLJ0SXlO6pMMsIM1Rshq9Wrwa3ypetVfU6yoYxKgjAR%2F4qjCJKpCcyDk%2BnLKPXNnU9nneDfxYMdtKnG8S%2BnlCSQUXw49AzWZ6ykCKq%2BAMT16Ta8LvP%2BQ%3D%3D"
-         alt="">
+<div class="clearfix" style="overflow: hidden; clear: both; min-height: calc(100vh - 41px);">
+  <div style="float: left; width: 200px; text-align: center;">
+    <mat-card *ngFor="let imageMapping of imageMappings" class="item"
+              [class.active]="imageMapping.id === activeImageMapping.id"
+              (click)="load(imageMapping.id)">
+      <img [src]="imageMapping.url" style="max-width: 170px; max-height: 100px;"/>
+      <mat-card-content>{{imageMapping.tags.join(',')}}</mat-card-content>
+    </mat-card>
+  </div>
+  <div style="float: left; width: calc(100% - 450px); text-align: center;">
+    <img *ngIf="activeImageMapping" [src]="activeImageMapping.url" style="max-height: calc(100vh - 101px)"/>
     <p>
-      <span matBadge="4" matBadgeOverlap="false">Dandy with the ladies!</span>
+      <span [matBadge]="activeImageMapping.tags.length" matBadgeOverlap="false">{{activeImageMapping.gsPath}}</span>
     </p>
 
   </div>
   <div
     style="float: left; width: 230px; height: 100%; border-width: 0 1px 0 1px; border-style: solid; border-color: #ddd;">
 
-    <p style="border-width: 0 0 1px 0; border-style: solid; border-color: #ddd; padding: 0 20px 12px 20px; font-size: 1.1em;">Filters</p>
+    <p
+      style="border-width: 0 0 1px 0; border-style: solid; border-color: #ddd; padding: 0 20px 12px 20px; font-size: 1.1em;">
+      Filters</p>
     <div style="padding: 0 20px; ">
       <mat-checkbox color="primary">Space Dandy</mat-checkbox>
       <br>

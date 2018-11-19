@@ -15,8 +15,8 @@ export class PhotoTaggerService {
 
     const halfLimit = Math.ceil(limit / 2);
 
-    const position = index % limit || limit;
-    const skip = position > halfLimit ? index - halfLimit : (index - position);
+    const position = index < limit ? index % limit : halfLimit;
+    const skip = index > halfLimit ? index - halfLimit : index - position;
 
     return this.animalBot.getCsvImageMappings({
       skip,

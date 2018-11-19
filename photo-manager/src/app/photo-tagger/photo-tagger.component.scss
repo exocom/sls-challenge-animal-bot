@@ -1,0 +1,21 @@
+:host {
+  mat-chip {
+    padding: 0px 7px;
+    font-size: 10px;
+    min-height: 18px;
+  }
+
+  mat-card {
+    margin-bottom: 20px;
+  }
+}
+
+.item {
+  font-size: .5em;
+
+
+}
+
+.active {
+  border-bottom: 3px solid #bada55;
+}
