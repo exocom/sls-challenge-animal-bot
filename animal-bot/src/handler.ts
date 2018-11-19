@@ -21,6 +21,10 @@ const fs = {
 const rekognition = new Rekognition({region: 'us-west-2'});
 const lambdaUtil = new LambdaUtil();
 
+const escapeRegExp = (string) => {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+};
+
 export const detectRareAlien = async (event, context) => {
   const catBuffer = await fs.readFile(path.join(__dirname, 'cat.jpeg'));
 
@@ -222,7 +226,7 @@ export const updateImagesCsvMapping: ApiGatewayHandler = async (event, context) 
 
   const csvLineNumber = id as number - 1;
   const csvLine = `${state},${gsPath},${tags.join(',')}`;
-  const csvLineRegExp = new RegExp(`^.*?${gsPath}.*?$`);
+  const csvLineRegExp = new RegExp(`^.*?${escapeRegExp(gsPath)}.*?$`);
 
   const csvLines = csv.split(/\r?\n/);
   if (!csvLineRegExp.test(csvLines[csvLineNumber])) {
