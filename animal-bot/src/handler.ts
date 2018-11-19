@@ -78,9 +78,14 @@ interface CsvMapping {
 }
 
 export const getImagesCsvMappings: ApiGatewayHandler = async (event, context) => {
-  const queryStringParameters = plainToClass(ImagesCsvMappingsRequestQueryStringParameters, event.queryStringParameters, {excludePrefixes: ['_']});
-  const {skip, limit} = queryStringParameters;
-  if (typeof limit === 'string' || typeof skip === 'string') throw new Error('invalid limit or skip');
+  const {skip, limit} = plainToClass(ImagesCsvMappingsRequestQueryStringParameters, event.queryStringParameters, {excludePrefixes: ['_']});
+  if (typeof limit === 'string' || typeof skip === 'string') {
+    const errors = [{
+      type: 'Validation',
+      message: 'Invalid Skip or Limit'
+    }];
+    return lambdaUtil.apiResponseJson({statusCode: 400, body: {errors}});
+  }
 
   const file = bucket.file(fileName);
   const stream = file.createReadStream();
@@ -139,7 +144,7 @@ export const getImagesCsvMappings: ApiGatewayHandler = async (event, context) =>
 
   try {
     for (let csvMapping of csvMappings) {
-      if (csvMapping === null) continue;
+      if (!(csvMapping && csvMapping.gsPath)) continue;
       const [url] = await bucket.file(csvMapping.gsPath.replace(gsFileNameRegExp, '')).getSignedUrl({
         action: 'read',
         expires: moment().add(1, 'day').valueOf()
