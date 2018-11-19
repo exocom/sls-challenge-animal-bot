@@ -7,7 +7,15 @@ import {ApiGatewayHandler, LambdaUtil} from '../../libs/lambda-util/lambda-util'
 import {deserialize, plainToClass} from 'class-transformer';
 import {Storage} from '@google-cloud/storage';
 import moment = require('moment');
+import {v1beta1} from '@google-cloud/automl';
 
+const automl = v1beta1;
+const projectId = 'serverless-animal-bot';
+const computeRegion = 'us-central1';
+const modelId = 'spacedandy_v20181119063111';
+const client = new automl.PredictionServiceClient();
+const modelFullId = client.modelPath(projectId, computeRegion, modelId);
+const scoreThreshold = .5;
 
 const storage = new Storage();
 const bucketName = 'serverless-animal-bot-vcm';
@@ -28,6 +36,7 @@ const escapeRegExp = (string) => {
 export const detectRareAlien = async (event, context) => {
   const catBuffer = await fs.readFile(path.join(__dirname, 'cat.jpeg'));
 
+  // AWS
   const params = {
     Image: {
       Bytes: catBuffer // new Buffer('...') || 'STRING_VALUE' /* Strings will be Base-64 encoded on your behalf */,
@@ -43,11 +52,21 @@ export const detectRareAlien = async (event, context) => {
       || p.Name === 'Mammal' || p.Name === 'Bird' || p.Name === 'Amphibian'
       || p.Name === 'Reptile' || p.Name === 'Fish')
   });
+
   if (isAnimal && label) {
     const message = `I don't know but QT says "It's an ordinary ${label.Name}."`;
     console.log(message);
   }
 
+  // Google Cloud
+  const payload = {image: {imageBytes: catBuffer}};
+
+  const responses = await client.predict({name: modelFullId, payload: payload, params: {scoreThreshold}})
+  console.log(`Prediction results:`);
+  responses[0].payload.forEach(result => {
+    console.log(`Predicted class name: ${result.displayName}`);
+    console.log(`Predicted class score: ${result.classification.score}`);
+  });
 };
 
 class ImagesCsvMappingsRequestQueryStringParameters {
