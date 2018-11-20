@@ -12,7 +12,7 @@ import {v1beta1} from '@google-cloud/automl';
 const automl = v1beta1;
 const projectId = 'serverless-animal-bot';
 const computeRegion = 'us-central1';
-const modelId = 'spacedandy_v20181119063111';
+const modelId = 'ICN52505916782813180';
 const client = new automl.PredictionServiceClient();
 const modelFullId = client.modelPath(projectId, computeRegion, modelId);
 const scoreThreshold = .5;
@@ -39,7 +39,7 @@ export const detectRareAlien = async (event, context) => {
   // AWS
   const params = {
     Image: {
-      Bytes: catBuffer // new Buffer('...') || 'STRING_VALUE' /* Strings will be Base-64 encoded on your behalf */,
+      Bytes: catBuffer
     },
     MaxLabels: 5,
     MinConfidence: 80
@@ -60,8 +60,7 @@ export const detectRareAlien = async (event, context) => {
 
   // Google Cloud
   const payload = {image: {imageBytes: catBuffer}};
-
-  const responses = await client.predict({name: modelFullId, payload: payload, params: {scoreThreshold}})
+  const responses = await client.predict({ name: modelFullId, payload, params: {score_threshold: scoreThreshold}});
   console.log(`Prediction results:`);
   responses[0].payload.forEach(result => {
     console.log(`Predicted class name: ${result.displayName}`);
