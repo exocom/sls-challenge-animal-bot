@@ -35,6 +35,7 @@ interface ApiResponse<T> {
 export class AnimalBotService {
 
   private url = 'http://localhost:5000/http/images/csv-mappings';
+  //private url = 'http://localhost:80/http/images/csv-mappings';
 
   constructor(private http: HttpClient) {
   }

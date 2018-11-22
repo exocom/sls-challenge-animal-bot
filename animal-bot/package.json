@@ -10,7 +10,7 @@
     "watch": "../node_modules/.bin/tsc -w"
   },
   "devDependencies": {
-    "@kalarrs/serverless-local-dev-server": "^1.1.7",
+    "@kalarrs/serverless-local-dev-server": "https://github.com/kalarrs/serverless-local-dev-server#KAL-88",
     "@kalarrs/serverless-project-utils": "^2.2.1",
     "@types/node": "^10.12.3",
     "aws-sdk": "^2.356.0",
@@ -26,6 +26,9 @@
     "@google-cloud/automl": "^0.1.2",
     "@google-cloud/storage": "^2.3.1",
     "class-transformer": "^0.2.0",
-    "moment": "^2.22.2"
+    "moment": "^2.22.2",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.2",
+    "twitter": "^1.7.1"
   }
 }

@@ -3,19 +3,22 @@ import {readFile} from 'fs';
 import {promisify} from 'util';
 import path = require('path');
 import {Readable} from 'stream';
-import {ApiGatewayHandler, LambdaUtil} from '../../libs/lambda-util/lambda-util';
+import {ScheduleEventHandler, ApiGatewayHandler, LambdaUtil} from '../../libs/lambda-util/lambda-util';
 import {deserialize, plainToClass} from 'class-transformer';
 import {Storage} from '@google-cloud/storage';
 import moment = require('moment');
+import request = require('request-promise');
 import {v1beta1} from '@google-cloud/automl';
+import Twitter = require('twitter');
 
 const automl = v1beta1;
 const projectId = 'serverless-animal-bot';
 const computeRegion = 'us-central1';
 const modelId = 'ICN52505916782813180';
-const client = new automl.PredictionServiceClient();
-const modelFullId = client.modelPath(projectId, computeRegion, modelId);
-const scoreThreshold = .5;
+const predictionServiceClient = new automl.PredictionServiceClient();
+const modelFullId = predictionServiceClient.modelPath(projectId, computeRegion, modelId);
+const scoreThreshold = .8;
+const minConfidence = 70;
 
 const storage = new Storage();
 const bucketName = 'serverless-animal-bot-vcm';
@@ -29,20 +32,46 @@ const fs = {
 const rekognition = new Rekognition({region: 'us-west-2'});
 const lambdaUtil = new LambdaUtil();
 
+const twitterClient = new Twitter({
+  consumer_key: process.env.TWITTER_CONSUMER_KEY,
+  consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
+  access_token_key: process.env.TWITTER_ACCESS_TOKEN_KEY,
+  access_token_secret: process.env.TWITTER_ACCESS_TOKEN_SECRET
+});
+
 const escapeRegExp = (string) => {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 };
 
-export const detectRareAlien = async (event, context) => {
-  const catBuffer = await fs.readFile(path.join(__dirname, 'cat.jpeg'));
+const google = async (imageBuffer) => {
+  const payload = {image: {imageBytes: imageBuffer}};
+  const [response] = await predictionServiceClient.predict({
+    name: modelFullId,
+    payload,
+    params: {score_threshold: scoreThreshold}
+  });
+  let rareAliens: Array<{ name: string; woolong: number; }> = [];
+  let alohaOeCrewMembers: Array<{ name: string; }> = [];
+  let mainCharacters: Array<{ name: string; }> = [];
 
-  // AWS
+  // TODO : check if any of the matched are rare, crew member, or main characters.
+  response.payload.forEach(result => {
+    console.log(`Predicted class name: ${result.displayName}`);
+    console.log(`Predicted class score: ${result.classification.score}`);
+  });
+
+  return {
+    rareAliens,
+    alohaOeCrewMembers,
+    mainCharacters
+  }
+};
+
+const aws = async (imageBuffer) => {
   const params = {
-    Image: {
-      Bytes: catBuffer
-    },
-    MaxLabels: 5,
-    MinConfidence: 80
+    Image: {Bytes: imageBuffer},
+    MaxLabels: 10,
+    MinConfidence: minConfidence
   };
   const result = await rekognition.detectLabels(params).promise();
 
@@ -53,19 +82,42 @@ export const detectRareAlien = async (event, context) => {
       || p.Name === 'Reptile' || p.Name === 'Fish')
   });
 
-  if (isAnimal && label) {
-    const message = `I don't know but QT says "It's an ordinary ${label.Name}."`;
-    console.log(message);
-  }
+  return {
+    isAnimal,
+    label
+  };
+};
 
-  // Google Cloud
-  const payload = {image: {imageBytes: catBuffer}};
-  const responses = await client.predict({ name: modelFullId, payload, params: {score_threshold: scoreThreshold}});
-  console.log(`Prediction results:`);
-  responses[0].payload.forEach(result => {
-    console.log(`Predicted class name: ${result.displayName}`);
-    console.log(`Predicted class score: ${result.classification.score}`);
+const pollRate = 15;
+
+export const detectRareAlien: ScheduleEventHandler = async (event, context) => {
+  const startAt = moment().subtract(pollRate, 'minutes');
+  const tweets = await twitterClient.get('statuses/mentions_timeline');
+  const tweetsWithImage = tweets.filter(tweet => {
+    const createdAt = moment(tweet.createdAt);
+    return createdAt > startAt && tweet.text.indexOf('image?') > -1 && tweet.entities.media.length
   });
+
+  tweetsWithImage.map(async tweet => {
+    let message = '';
+    for(const media of tweet.entities.media) {
+      const imgBytes = await request(media.media_url,{ encoding: null });
+      const [awsResult, googleResult] = await Promise.all([aws(imgBytes), google(imgBytes)]);
+
+      if (awsResult.isAnimal && awsResult.label) {
+        const message = `I don't know but QT says "It's an ordinary ${awsResult.label.Name}."`;
+        console.log(message);
+      }
+    }
+    const tweeted = await twitterClient.post('statuses/update', {
+      status: `@${tweet.user.screen_name} ${message}`,
+      in_reply_to_status_id: tweet.id_str
+    });
+    console.log(tweeted);
+    return tweeted;
+  });
+
+  await Promise.all(tweetsWithImage);
 };
 
 class ImagesCsvMappingsRequestQueryStringParameters {
