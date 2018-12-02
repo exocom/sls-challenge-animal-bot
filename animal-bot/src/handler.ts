@@ -152,7 +152,7 @@ interface CsvMapping {
 }
 
 export const getImagesCsvMappings: ApiGatewayHandler = async (event, context) => {
-  const {skip, limit} = plainToClass(ImagesCsvMappingsRequestQueryStringParameters, event.queryStringParameters, {excludePrefixes: ['_']});
+  const {skip, limit} = plainToClass<ImagesCsvMappingsRequestQueryStringParameters, object>(ImagesCsvMappingsRequestQueryStringParameters, event.queryStringParameters, {excludePrefixes: ['_']});
   if (typeof limit === 'string' || typeof skip === 'string') {
     const errors = [{
       type: 'Validation',
@@ -268,7 +268,7 @@ class UpdateImagesCsvMappingRequestBody {
 }
 
 export const updateImagesCsvMapping: ApiGatewayHandler = async (event, context) => {
-  const {csvMappingId} = plainToClass(UpdateImagesCsvMappingRequestQueryStringParameters, event.pathParameters, {excludePrefixes: ['_']});
+  const {csvMappingId} = plainToClass<UpdateImagesCsvMappingRequestQueryStringParameters, object>(UpdateImagesCsvMappingRequestQueryStringParameters, event.pathParameters, {excludePrefixes: ['_']});
   const {id, state, gsPath, tags} = deserialize(UpdateImagesCsvMappingRequestBody, event.body, {excludePrefixes: ['_']});
 
   if (csvMappingId !== id || csvMappingId === null) {

@@ -377,6 +377,21 @@ aws-sdk@^2.177.0, aws-sdk@^2.228.0:
     uuid "3.1.0"
     xml2js "0.4.19"
 
+aws-sdk@^2.368.0:
+  version "2.368.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.368.0.tgz#5855201dca9740f253e468f7ce8caa03e5eb696b"
+  integrity sha512-pRq4mn6MGthemTcDETBpQ0accSn/VpZEHzjloFmj2KpEavS8FEwhLvatgFqu8zlDunEfARRyL3Gz3FONO8ZFVA==
+  dependencies:
+    buffer "4.9.1"
+    events "1.1.1"
+    ieee754 "1.1.8"
+    jmespath "0.15.0"
+    querystring "0.2.0"
+    sax "1.2.1"
+    url "0.10.3"
+    uuid "3.1.0"
+    xml2js "0.4.19"
+
 babel-polyfill@^6.26.0:
   version "6.26.0"
   resolved "https://registry.yarnpkg.com/babel-polyfill/-/babel-polyfill-6.26.0.tgz#379937abc67d7895970adc621f284cd966cf2153"
@@ -1939,7 +1954,7 @@ gulp@^4.0.0:
     undertaker "^1.0.0"
     vinyl-fs "^3.0.0"
 
-"gulp@github:gulpjs/gulp#v4.0.0-alpha.3":
+gulp@gulpjs/gulp#v4.0.0-alpha.3:
   version "4.0.0-alpha.3"
   resolved "https://codeload.github.com/gulpjs/gulp/tar.gz/057df5963034eb6426d99650abba15e4d912b0b7"
   dependencies:
