@@ -16,7 +16,7 @@ const fs = {
 };
 
 
-export const handler: S3Handler = async (event, context) => {
+export const createScreenshots: S3Handler = async (event, context) => {
   const watcher = chokidar.watch('/tmp')
     .on('add', filePath => {
       const file = bucket.file(filePath);
