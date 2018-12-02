@@ -19,12 +19,12 @@ provider:
 functions:
   createScreenshots:
     handler: src/handler.createScreenshots
-    layers:
-      - arn:aws:lambda:us-west-2:273747228535:layer:ffmpeg:3
     events:
       - s3:
-        bucket: ${self:provider.environment.BUCKET}
-        event: s3:ObjectCreated:*
+          bucket: ${self:provider.environment.BUCKET}
+          event: s3:ObjectCreated:*
+    layers:
+      - arn:aws:lambda:us-west-2:273747228535:layer:ffmpeg:3
 
 custom:
   user: ${file(../serverless.yml):custom.user}
