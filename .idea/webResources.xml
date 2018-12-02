@@ -9,6 +9,8 @@
             <path value="file://$PROJECT_DIR$/animal-bot/src" />
             <path value="file://$PROJECT_DIR$/photo-manager" />
             <path value="file://$PROJECT_DIR$/photo-manager/src" />
+            <path value="file://$PROJECT_DIR$/screenshot" />
+            <path value="file://$PROJECT_DIR$/screenshot/src" />
           </resourceRoots>
         </entryData>
       </entry>

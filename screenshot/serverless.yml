@@ -1,0 +1,34 @@
+service: screenshot
+
+plugins:
+  - serverless-webpack
+  - "@kalarrs/serverless-project-utils"
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  profile: ${file(../serverless.yml):provider.profile}
+  region: ${file(../serverless.yml):provider.region}
+  stage: ${file(../serverless.yml):provider.stage}
+  timeout: 60
+  memorySize: 128
+  environment:
+    BUCKET: ${env:BUCKET, file(../serverless.yml):provider.environment.EPISODES_BUCKET}
+
+
+functions:
+  createScreenshots:
+    handler: src/handler.createScreenshots
+    layers:
+      - arn:aws:lambda:us-west-2:273747228535:layer:ffmpeg:3
+    events:
+      - s3:
+        bucket: ${self:provider.environment.BUCKET}
+        event: s3:ObjectCreated:*
+
+custom:
+  user: ${file(../serverless.yml):custom.user}
+  localDevPort: 5000
+  webpack:
+    webpackConfig: "webpack.config.js"
+    includeModules: true

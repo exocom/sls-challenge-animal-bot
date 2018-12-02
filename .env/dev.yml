@@ -1,3 +1,4 @@
 ---
   provider: 
     environment: 
+      EPISODES_BUCKET: space-dandy-episodes
